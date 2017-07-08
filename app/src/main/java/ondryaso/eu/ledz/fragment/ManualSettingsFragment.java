@@ -11,7 +11,10 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.net.URISyntaxException;
+
 import ondryaso.eu.ledz.R;
+import ondryaso.eu.ledz.model.Communication;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -38,6 +41,36 @@ public class ManualSettingsFragment extends Fragment implements View.OnClickList
         this.redBar.setOnSeekBarChangeListener(this);
         this.greenBar.setOnSeekBarChangeListener(this);
         this.blueBar.setOnSeekBarChangeListener(this);
+
+
+        Communication com = null;
+        try {
+            com = Communication.getInstance("ws://10.0.1.30:8101");
+            boolean b = com.connectBlocking();
+
+            com.addColorStatusListener(new Communication.IColorStatusListener() {
+                @Override
+                public void onColorStatus(final float r, final float g, final float b) {
+                    colorRect.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            colorRect.setBackgroundColor(Color.rgb((int) (r * 255), (int) (g * 255),
+                                    (int) (b * 255)));
+                        }
+                    });
+                }
+
+                @Override
+                public boolean fireOnChange() {
+                    return true;
+                }
+            });
+
+            com.setColorNotificationTimeout(50);
+        } catch (URISyntaxException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
         return v;
     }
 
